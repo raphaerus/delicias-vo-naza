@@ -5,8 +5,9 @@
   "description": "App de Delivery para Delícias da Vó Naza",
   "main": "index.tsx",
   "scripts": {
-    "start": "npx serve .",
-    "dev": "npx vite"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,8 @@
   },
   "devDependencies": {
     "vite": "^6.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   }
 }
