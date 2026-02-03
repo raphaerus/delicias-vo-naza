@@ -15,8 +15,6 @@ import {
   Sparkles,
   Send,
   X,
-  Phone,
-  Info,
   Instagram
 } from 'lucide-react';
 import { PRODUCTS, DELIVERY_FEE, WHATSAPP_NUMBER, LOGO_URL } from './constants';
@@ -157,23 +155,33 @@ ${order.customer.complement ? `✨ *Compl:* ${order.customer.complement}` : ''}
     setAiLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey || apiKey === "SUA_CHAVE_AQUI") {
+        throw new Error("Chave de API não configurada corretamente na Vercel.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `Você é o Netinho(a) Virtual, o assistente carinhoso das "Delícias da Vó Naza". 
 Você é neto(a) da Vó Naza e ajuda os clientes com o cardápio maravilhoso dela.
 O cardápio é:
 ${PRODUCTS.map(p => `- ${p.name}: ${p.description} (R$ ${p.price.toFixed(2)})`).join('\n')}
 Fale de forma bem amorosa, use "querido(a)", use emojis de coração e comida. Diga que a vovó está na cozinha preparando tudo com muito carinho. O endereço é no Pacoval.
 
-Pergunta: ${userMsg}`;
+Pergunta do cliente: ${userMsg}`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
 
-      setAiMessages(prev => [...prev, { role: 'ai', text: response.text || "A vovó me chamou ali e eu me perdi. Pode repetir?" }]);
-    } catch (e) {
-      setAiMessages(prev => [...prev, { role: 'ai', text: "Ih, a internet do Pacoval oscilou! Pode tentar de novo?" }]);
+      const textResponse = response.text || "A vovó me chamou ali e eu me perdi. Pode repetir?";
+      setAiMessages(prev => [...prev, { role: 'ai', text: textResponse }]);
+    } catch (e: any) {
+      console.error("Erro no Gemini:", e);
+      setAiMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: "Ih, a internet do Pacoval oscilou! Pode tentar de novo? (Dica: Verifique se sua API_KEY foi configurada corretamente na Vercel)" 
+      }]);
     } finally {
       setAiLoading(false);
     }
@@ -224,7 +232,7 @@ Pergunta: ${userMsg}`;
 
             {/* Informações de Contato Rápidas */}
             <div className="grid grid-cols-2 gap-3">
-              <a href="https://instagram.com/deliciasvonaza" target="_blank" className="bg-white p-4 rounded-3xl shadow-sm border border-brand-peach/10 flex items-center gap-3 active:scale-95 transition-all">
+              <a href="https://instagram.com/deliciasvonaza" target="_blank" rel="noopener noreferrer" className="bg-white p-4 rounded-3xl shadow-sm border border-brand-peach/10 flex items-center gap-3 active:scale-95 transition-all">
                 <div className="p-2 bg-brand-pink/10 text-brand-pink rounded-xl">
                   <Instagram size={20} />
                 </div>
