@@ -1,10 +1,7 @@
 
-// Updated Flavor type to reflect the specific names used in the product catalog and resolve type errors in constants.tsx
-export type Flavor = 'Frango da Vovó' | 'Camarão Especial' | 'Palmito Macio';
-
 export interface Product {
   id: string;
-  name: Flavor;
+  name: string;
   description: string;
   price: number;
   image: string;
