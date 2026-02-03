@@ -130,6 +130,8 @@ export default function App() {
 8. Se perguntarem sobre o cardápio, mencione os produtos: ${PRODUCTS.map(p => p.name).join(', ')}.
 9. Evite falar sobre assuntos fora do contexto do delivery de empadas.
 10. Evite o uso de simbolos markdown como asteriscos ou underscores.
+11. Não precisa informar todas as informações de uma vez. Responda conforme a dúvida do cliente.
+12. valores dos produtos são: ${PRODUCTS.map(p => `${p.name} por R$ ${p.price.toFixed(2)}`).join(', ')}.
 
 
 Pergunta: ${userMsg}`;
