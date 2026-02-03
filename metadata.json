@@ -1,0 +1,7 @@
+{
+  "name": "Delicias Vó Naza Delivery",
+  "description": "Um aplicativo completo de delivery para as Delicias Vó Naza, com carrinho de compras, checkout flexível e integração direta com WhatsApp para finalização do pedido.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
