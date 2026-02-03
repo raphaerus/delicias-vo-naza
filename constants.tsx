@@ -26,21 +26,21 @@ export const PRODUCTS: Product[] = [
     id: '1',
     name: 'Frango da Vovó',
     description: 'O segredo da Vó Naza: frango desfiado bem temperadinho com aquele creme que só ela sabe fazer.',
-    price: 8.50, // <--- ALTERE O PREÇO AQUI
+    price: 7.00, // <--- ALTERE O PREÇO AQUI
     image: IMG_PADRAO
   },
   {
     id: '2',
     name: 'Camarão Especial',
     description: 'Camarões limpos e selecionados, mergulhados no molho de tomate caseiro da vovó.',
-    price: 12.00, // <--- ALTERE O PREÇO AQUI
+    price: 8.00, // <--- ALTERE O PREÇO AQUI
     image: IMG_PADRAO
   },
   {
     id: '3',
     name: 'Palmito Macio',
     description: 'Pedacinhos de palmito real em um creme suave e a massa que derrete na boca.',
-    price: 9.50, // <--- ALTERE O PREÇO AQUI
+    price: 8.00, // <--- ALTERE O PREÇO AQUI
     image: IMG_PADRAO
   }
 ];
