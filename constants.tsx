@@ -11,7 +11,7 @@ export const ADDRESS_DISPLAY = "Av. Manoel Pacífico de Cantuário, 125, Pacoval
 
 // 🕒 REGRAS DE FUNCIONAMENTO
 export const OPENING_HOURS = {
-  open: "14:00",
+  open: "12:00",
   close: "21:00",
   days: "Segunda a Domingo"
 };
