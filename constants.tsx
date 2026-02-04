@@ -17,7 +17,7 @@ export const OPENING_HOURS = {
 };
 
 // 🔴 INTERRUPTOR DE SEGURANÇA (true = Aberto / false = Fechado Manualmente)
-export const IS_KITCHEN_OPEN_MANUAL = true;
+export const IS_KITCHEN_OPEN_MANUAL = false;
 
 // 🛵 STATUS DA ENTREGA (true = Fazemos entrega / false = Apenas retirada)
 export const IS_DELIVERY_ENABLED = false;
