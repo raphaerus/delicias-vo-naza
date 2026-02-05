@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { LOGO_URL, ADDRESS_DISPLAY, INITIAL_STORE_SETTINGS } from './constants';
 import { CartItem, UserData, PaymentMethod, Order, Product, StoreSettings } from './types';
-import { GoogleGenAI } from "@google/genai";
 import { api } from './services/api';
 
 type View = 'menu' | 'cart' | 'checkout' | 'success';
@@ -162,7 +161,8 @@ export default function App() {
     setAiLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("Chave de API do Gemini não encontrada");
 
       const prompt = `Você é o Netinho da Vó Naza. REGRAS CRÍTICAS:
 1. Fale o quanto quiser. Mas não exagere.Seja CARISMÁTICO e AFETIVO. Ajude as pessoas a conhecerem as empadas da Vó Naza.
@@ -180,15 +180,39 @@ export default function App() {
 
 Pergunta: ${userMsg}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash', // Updated model name
-        contents: prompt,
+      // Usando REST direto. Modelo: gemini-2.0-flash (validado via script)
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        })
       });
 
-      setAiMessages(prev => [...prev, { role: 'ai', text: response.text || "Ih, me perdi. Pode repetir?" }]);
-    } catch (e) {
-      console.error(e);
-      setAiMessages(prev => [...prev, { role: 'ai', text: "A internet da vovó oscilou. Tenta de novo?" }]);
+      if (!response.ok) {
+        const errData = await response.json();
+        const errMsg = errData.error?.message || "Erro na API do Google";
+        if (response.status === 429) {
+          throw new Error("A vovó está falando com muitas pessoas ao mesmo tempo (Limite da IA atingido). Tente daqui a pouco!");
+        }
+        throw new Error(errMsg);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!text) throw new Error("Nenhuma resposta gerada pela IA");
+
+      setAiMessages(prev => [...prev, { role: 'ai', text: text }]);
+    } catch (e: any) {
+      console.error("AI Error:", e);
+      // alert removed per user request
+      const message = e.message || "Minha conexão falhou, querido. Pode repetir?";
+      setAiMessages(prev => [...prev, { role: 'ai', text: message }]);
     } finally {
       setAiLoading(false);
     }
