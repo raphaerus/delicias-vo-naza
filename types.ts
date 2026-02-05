@@ -4,7 +4,17 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string;
+  image_url: string;
+}
+
+export interface StoreSettings {
+  id: number;
+  is_open_manual: boolean;
+  opening_time: string;
+  closing_time: string;
+  delivery_fee: number;
+  allows_delivery: boolean;
+  whatsapp_number: string;
 }
 
 export interface CartItem extends Product {
