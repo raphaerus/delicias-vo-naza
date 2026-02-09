@@ -5,6 +5,7 @@ export interface Product {
   description: string;
   price: number;
   image_url: string;
+  is_available?: boolean;
 }
 
 export interface StoreSettings {
@@ -41,4 +42,5 @@ export interface Order {
   paymentMethod: PaymentMethod;
   total: number;
   deliveryMode: 'pickup' | 'delivery';
+  deviceId?: string;
 }

@@ -34,12 +34,60 @@ export const api = {
                 payment_method: order.paymentMethod,
                 total: order.total,
                 items: order.items,
-                status: 'pending'
+                status: 'pending',
+                device_id: order.deviceId // New field
             })
             .select()
             .single();
 
         if (error) throw error;
         return data;
+    },
+
+    getMyOrders: async (deviceId: string) => {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('device_id', deviceId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data as any[];
+    },
+
+    // --- ADMIN FUNCTIONS ---
+
+    getAdminOrders: async () => {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
+    updateOrderStatus: async (id: string, status: string) => {
+        const { error } = await supabase
+            .from('orders')
+            .update({ status })
+            .eq('id', id);
+        if (error) throw error;
+    },
+
+    toggleProductAvailability: async (id: string, isAvailable: boolean) => {
+        const { error } = await supabase
+            .from('products')
+            .update({ is_available: isAvailable })
+            .eq('id', id);
+        if (error) throw error;
+    },
+
+    updateStoreSettings: async (settings: Partial<StoreSettings>) => {
+        // settings tem id=1 hardcoded no banco
+        const { error } = await supabase
+            .from('store_settings')
+            .update(settings)
+            .eq('id', 1);
+        if (error) throw error;
     }
 };
