@@ -69,6 +69,10 @@ export default function ClientApp() {
         }
     };
 
+    import { supabase } from '../../lib/supabase';
+
+    // ... existing imports ...
+
     // Fetch Initial Data
     useEffect(() => {
         async function loadData() {
@@ -86,10 +90,25 @@ export default function ClientApp() {
             }
         }
         loadData();
+
+        // Realtime Subscription
+        const channel = supabase
+            .channel('realtime-settings-client')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'store_settings' },
+                (payload) => {
+                    setStoreSettings(payload.new as StoreSettings);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); }
     }, []);
 
     // Lógica para verificar se está aberto
     const isStoreOpen = useMemo(() => {
+        // ...
         if (!storeSettings.is_open_manual) return false;
 
         const now = new Date();
