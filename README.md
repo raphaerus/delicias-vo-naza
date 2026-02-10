@@ -1,57 +1,104 @@
-
 # 🥐 Delícias da Vó Naza - Delivery
 
 Um aplicativo de delivery artesanal desenvolvido para a **Vó Naza**, focado em facilidade de uso, estética acolhedora e integração direta com WhatsApp.
 
+![App Preview](https://i.ibb.co/example-preview.png)
+
 ## ✨ Funcionalidades
 
-- **Cardápio Interativo**: Visualização de produtos com fotos e descrições.
+### 📱 Cliente
+- **Cardápio em Tempo Real**: Produtos gerenciados via banco de dados (Supabase).
 - **Carrinho de Compras**: Gestão dinâmica de itens e quantidades.
-- **Checkout Flexível**: Suporta retirada no local ou entrega (se habilitada).
-- **Inteligência de Horários**: O app fecha automaticamente fora do horário comercial.
-- **Netinho Virtual (IA)**: Assistente integrado com Google Gemini para tirar dúvidas rápidas de forma sucinta.
+- **Rastreamento de Pedidos**: Acompanhamento de status sem login (via ID do dispositivo).
+- **Netinho Virtual (IA)**: Assistente integrado com Google Gemini para tirar dúvidas.
+- **Status da Loja**: Atualização automática se a loja abrir/fechar.
+
+### 🛡️ Painel Admin (/admin)
+- **Gestão de Pedidos**: Receba alertas sonoros e visuais de novos pedidos.
+- **Controle de Status**: Mude para "Preparando", "Saiu para Entrega", etc.
+- **Gestão de Estoque**: Ative/Desative produtos com um clique.
+- **Configurações da Loja**:
+    - Abra/Feche a loja manualmente.
+    - Defina horários automáticos.
+    - Altere a taxa de entrega.
 
 ---
 
-## 🛠️ Manual de Configurações (Como Personalizar)
+## 🛠️ Tecnologias Utilizadas
 
-Quase tudo no app pode ser alterado sem mexer na lógica de programação. Abra o arquivo **`constants.tsx`** para ajustar:
-
-### 1. Dados Básicos e Contato
-*   **`WHATSAPP_NUMBER`**: O número que receberá os pedidos. Use o formato `55DDD999999999`.
-*   **`LOGO_URL`**: Link da imagem da logo que aparece no topo e no chat da IA.
-*   **`ADDRESS_DISPLAY`**: O endereço da sua loja que aparece no checkout e que a IA informa aos clientes.
-
-### 2. Regras de Funcionamento (Horários e Status)
-*   **`OPENING_HOURS`**: 
-    *   `open`: Horário de abertura (ex: `"14:00"`).
-    *   `close`: Horário de fechamento (ex: `"21:00"`).
-*   **`IS_KITCHEN_OPEN_MANUAL`**: Mude para `false` se quiser fechar a loja imediatamente (ex: feriados), independente do horário.
-*   **`IS_DELIVERY_ENABLED`**: Mude para `false` se não estiver fazendo entregas no dia. O app esconderá a opção de entrega.
-*   **`DELIVERY_FEE`**: Valor cobrado pela entrega (R$).
-
-### 3. Cardápio e Preços
-*   **`PRODUCTS`**: Uma lista de objetos. Para cada produto você pode mudar:
-    *   `name`: Nome da empada.
-    *   `price`: Preço (use ponto para decimais, ex: `8.50`).
-    *   `description`: O texto explicativo do sabor.
+- **Frontend**: React, Vite, TailwindCSS.
+- **Backend (BaaS)**: Supabase (PostgreSQL, Auth, Realtime).
+- **IA**: Google Gemini 2.0 Flash (via API REST).
+- **Deploy**: Vercel.
 
 ---
 
-## 🤖 Netinho Virtual (Assistente de IA)
+## 🚀 Como Instalar e Configurar (Passo a Passo)
 
-O assistente foi treinado para ser **sucinto** e carinhoso. Ele sabe automaticamente se a loja está aberta ou fechada com base nas suas configurações em `constants.tsx`.
+### 1. Configuração do Supabase
+Crie um projeto em [supabase.com](https://supabase.com) e rode os scripts SQL abaixo no **SQL Editor**:
 
-Se quiser mudar as regras do que ele fala, procure a função `handleAiChat` no arquivo `App.tsx` e altere o texto dentro da variável `prompt`.
+#### A. Criar Tabelas e Segurança (RLS)
+Copie o conteúdo do arquivo `supabase_schema.sql` na raiz do projeto. Isso cria as tabelas `products`, `orders`, `store_settings` e define as regras básicas de segurança.
+
+#### B. Habilitar Atualizações em Tempo Real
+Para que o painel admin e o app cliente atualizem sozinhos:
+```sql
+alter publication supabase_realtime add table orders;
+alter publication supabase_realtime add table store_settings;
+```
+
+#### C. Configurar Permissões do Admin
+Para que o admin consiga salvar alterações:
+```sql
+-- Copie o conteúdo de fix_admin_permissions.sql
+create policy "Admins tem acesso total a configs" on public.store_settings for all to authenticated using (true) with check (true);
+create policy "Admins tem acesso total a produtos" on public.products for all to authenticated using (true) with check (true);
+create policy "Admins tem acesso total a pedidos" on public.orders for all to authenticated using (true) with check (true);
+```
+
+### 2. Configuração do Projeto Local
+
+1. Clone o repositório.
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Crie um arquivo `.env.local` na raiz (NÃO envie para o GitHub) com suas chaves:
+   ```env
+   VITE_SUPABASE_URL=sua_url_do_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_publica
+   VITE_GEMINI_API_KEY=sua_chave_do_google_aistudio
+   ```
+4. Rode o projeto:
+   ```bash
+   npm run dev
+   ```
+
+### 3. Deploy na Vercel
+
+1. Importe o projeto do GitHub para a Vercel.
+2. Nas configurações do projeto (**Project Settings > Environment Variables**), adicione as mesmas variáveis do passo anterior:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_GEMINI_API_KEY`
+3. O arquivo `vercel.json` na raiz já configura as rotas para funcionar com React Router.
 
 ---
 
-## 🚀 Publicando na Vercel
+## 🔐 Acesso ao Admin
 
-1. **Suba para o GitHub**: Certifique-se de que todos os arquivos estão no seu repositório.
-2. **Importe no Vercel**: Vá em [vercel.com/new](https://vercel.com/new).
-3. **Environment Variables**: Adicione a variável `API_KEY` com sua chave do Google Gemini.
-4. **Deploy**: Pronto! O site estará no ar.
+1. Acesse `/admin` (ex: `seusite.vercel.app/admin`).
+2. Crie um usuário no painel do Supabase (**Authentication > Users > Add User**) para ser seu login de administrador.
+3. Use este email e senha para entrar.
 
 ---
+
+## 📝 Personalização Rápida
+
+Algumas configurações visuais (como Logo e Textos fixos) ainda estão em **`constants.tsx`**.
+Os preços e horários são gerenciados diretamente pelo **Painel Admin**.
+
+---
+
 *Feito com carinho para a melhor vovó do mundo!* 👵❤️

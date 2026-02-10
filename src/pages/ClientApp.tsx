@@ -20,6 +20,7 @@ import { LOGO_URL, ADDRESS_DISPLAY, INITIAL_STORE_SETTINGS, PIX_KEY, PIX_NAME, I
 import { CartItem, UserData, PaymentMethod, Order, Product, StoreSettings } from '../../types';
 import { api } from '../../services/api';
 import { getDeviceId } from '../lib/device';
+import { supabase } from '../../lib/supabase';
 
 type View = 'menu' | 'cart' | 'checkout' | 'success' | 'orders';
 type DeliveryMode = 'pickup' | 'delivery';
@@ -69,9 +70,7 @@ export default function ClientApp() {
         }
     };
 
-    import { supabase } from '../../lib/supabase';
 
-    // ... existing imports ...
 
     // Fetch Initial Data
     useEffect(() => {
@@ -108,23 +107,35 @@ export default function ClientApp() {
 
     // Lógica para verificar se está aberto
     const isStoreOpen = useMemo(() => {
-        // ...
-        if (!storeSettings.is_open_manual) return false;
+        // Se o botão "Loja Aberta Manualmente" estiver ativado, a loja está ABERTA.
+        // Independente do horário. É um "Force Open".
+        if (storeSettings.is_open_manual) return true;
 
+        // Se estiver desligado, verificamos o horário (Lógica antiga: ou fecha tudo ou segue horário?)
+        // O usuário disse "ligar e desligar a loja". Então:
+        // Botão Ligado = ABERTA
+        // Botão Desligado = FECHADA
+
+        // Mas espere, existem campos de horário.
+        // Vamos assumir o comportamento híbrido mais comum:
+        // O botão é "Permitir Abertura". Se desligado, fecha tudo.
+        // Se ligado, checa horário. 
+
+        // O usuário reclamou que "não funciona". Provavelmente ele ligou o botão fora do horário
+        // e esperava que abrisse.
+
+        // VOU MUDAR PARA: Botão define TUDO.
+        // Se quiser usar horário automático, precisaria de um terceiro estado ou outro boolean.
+        // Como só temos `is_open_manual`, vamos tratar como "LOJA ESTÁ ABERTA?".
+
+        return storeSettings.is_open_manual;
+
+        /* Lógica antiga (comentada para referência)
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
-
-        // Fallback safe parsing
-        const openStr = storeSettings.opening_time || "12:00";
-        const closeStr = storeSettings.closing_time || "21:00";
-
-        const [openH, openM] = openStr.split(':').map(Number);
-        const [closeH, closeM] = closeStr.split(':').map(Number);
-
-        const openTime = openH * 60 + openM;
-        const closeTime = closeH * 60 + closeM;
-
+        // ...
         return currentTime >= openTime && currentTime <= closeTime;
+        */
     }, [storeSettings]);
 
     useEffect(() => {
