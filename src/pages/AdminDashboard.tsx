@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Package, Settings, ShoppingBag, Loader2, CheckCircle, XCircle, Clock, Save, ToggleLeft, ToggleRight } from 'lucide-react';
+import { LogOut, Package, Settings, ShoppingBag, Loader2, CheckCircle, XCircle, Clock, Save, ToggleLeft, ToggleRight, Plus, Edit, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { LOGO_URL } from '../../constants';
 import { api } from '../../services/api';
 import { Order, Product, StoreSettings } from '../../types';
@@ -16,6 +16,13 @@ export default function AdminDashboard() {
     const [products, setProducts] = useState<Product[]>([]);
     const [settings, setSettings] = useState<StoreSettings | null>(null);
     const [refreshKey, setRefreshKey] = useState(0); // To force re-fetch
+
+    // Product Modal State
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [productForm, setProductForm] = useState<Partial<Product>>({
+        name: '', description: '', price: 0, image_url: '', category: 'Empadas', is_available: true
+    });
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,7 +65,7 @@ export default function AdminDashboard() {
                 const data = await api.getAdminOrders();
                 setOrders(data as any);
             } else if (activeTab === 'products') {
-                const data = await api.getProducts();
+                const data = await api.getAllProducts();
                 setProducts(data);
             } else if (activeTab === 'settings') {
                 const data = await api.getStoreSettings();
@@ -97,6 +104,45 @@ export default function AdminDashboard() {
             setRefreshKey(p => p + 1);
         } catch (e) {
             alert("Erro ao atualizar produto");
+        }
+    };
+
+    const openProductModal = (product?: Product) => {
+        if (product) {
+            setEditingProduct(product);
+            setProductForm(product);
+        } else {
+            setEditingProduct(null);
+            setProductForm({ name: '', description: '', price: 0, image_url: '', category: 'Empadas', is_available: true });
+        }
+        setIsProductModalOpen(true);
+    };
+
+    const handleSaveProduct = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingProduct) {
+                await api.updateProduct(editingProduct.id, productForm);
+                alert("Produto atualizado!");
+            } else {
+                await api.createProduct(productForm as any);
+                alert("Produto criado!");
+            }
+            setIsProductModalOpen(false);
+            setRefreshKey(p => p + 1);
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao salvar produto.");
+        }
+    };
+
+    const handleDeleteProduct = async (id: string) => {
+        if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+        try {
+            await api.deleteProduct(id);
+            setRefreshKey(p => p + 1);
+        } catch (error) {
+            alert("Erro ao excluir produto.");
         }
     };
 
@@ -220,31 +266,140 @@ export default function AdminDashboard() {
 
                 {activeTab === 'products' && (
                     <div>
-                        <h2 className="text-2xl font-bold mb-4">Gerenciar Produtos</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-brand-brown">Gerenciar Produtos</h2>
+                            <button
+                                onClick={() => openProductModal()}
+                                className="bg-brand-pink text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-sm hover:brightness-110"
+                            >
+                                <Plus size={20} /> Novo Produto
+                            </button>
+                        </div>
+
                         <div className="grid gap-4">
                             {products.map(product => (
-                                <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                                <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-brand-peach/10">
                                     <div className="flex items-center gap-4">
-                                        <img src={product.image_url} className={`w-16 h-16 rounded-xl object-cover ${!product.is_available && 'grayscale disabled'}`} alt={product.name} />
+                                        <div className="relative w-16 h-16">
+                                            <img src={product.image_url} className={`w-full h-full rounded-xl object-cover ${!product.is_available && 'grayscale opacity-50'}`} alt={product.name} />
+                                            {!product.is_available && <div className="absolute inset-0 flex items-center justify-center"><XCircle size={20} className="text-red-500" /></div>}
+                                        </div>
                                         <div>
-                                            <h3 className="font-bold">{product.name}</h3>
-                                            <p className="text-sm text-brand-green">R$ {product.price.toFixed(2)}</p>
+                                            <h3 className="font-bold text-brand-brown">{product.name}</h3>
+                                            <p className="text-sm text-brand-green font-bold">R$ {product.price.toFixed(2)}</p>
+                                            <span className="text-[10px] uppercase tracking-wider text-neutral-400">{product.category}</span>
                                         </div>
                                     </div>
-                                    <button
-                                        // For now, simple toggle availability. 
-                                        // Ideally we need full CRUD but user asked "Edit Prices" too.
-                                        // I'll stick to toggle for now as simplified Admin.
-                                        className="bg-neutral-100 p-2 rounded-lg text-xs font-bold"
-                                    >
-                                        (Editar no Supabase por enquanto)
-                                    </button>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleToggleProduct(product)}
+                                            title={product.is_available ? "Pausar Vendas" : "Retomar Vendas"}
+                                            className={`p-2 rounded-lg transition-colors ${product.is_available ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                                        >
+                                            {product.is_available ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                                        </button>
+                                        <button
+                                            onClick={() => openProductModal(product)}
+                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit size={20} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
-                            <p className="text-center text-neutral-500 mt-8 text-sm">
-                                ⚠️ Para editar preços ou nomes, use o <a href="https://supabase.com/dashboard/project/tlkoejcsfhwgyjfmyvfe/editor" target="_blank" className="text-brand-pink underline">Painel do Supabase</a>.
-                                <br />(Adicionaremos edição completa aqui na próxima atualização!)
-                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Product Modal */}
+                {isProductModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-brand-brown">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
+                                <button onClick={() => setIsProductModalOpen(false)} className="p-2 hover:bg-neutral-100 rounded-full"><X size={20} /></button>
+                            </div>
+
+                            <form onSubmit={handleSaveProduct} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 mb-1">Nome do Produto</label>
+                                    <input
+                                        required
+                                        value={productForm.name}
+                                        onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                                        className="w-full bg-neutral-50 border border-neutral-200 p-3 rounded-xl focus:outline-brand-pink"
+                                        placeholder="Ex: Empada de Frango"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-neutral-500 mb-1">Preço (R$)</label>
+                                        <input
+                                            type="number" step="0.50" required
+                                            value={productForm.price}
+                                            onChange={e => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
+                                            className="w-full bg-neutral-50 border border-neutral-200 p-3 rounded-xl focus:outline-brand-pink"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-neutral-500 mb-1">Categoria</label>
+                                        <select
+                                            value={productForm.category}
+                                            onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                                            className="w-full bg-neutral-50 border border-neutral-200 p-3 rounded-xl focus:outline-brand-pink"
+                                        >
+                                            <option>Empadas</option>
+                                            <option>Bebidas</option>
+                                            <option>Combos</option>
+                                            <option>Sobremesas</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 mb-1">Descrição</label>
+                                    <textarea
+                                        value={productForm.description}
+                                        onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                                        className="w-full bg-neutral-50 border border-neutral-200 p-3 rounded-xl focus:outline-brand-pink h-20 resize-none"
+                                        placeholder="Ingredientes e detalhes..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 mb-1 flex items-center gap-2">
+                                        <ImageIcon size={14} /> URL da Imagem
+                                    </label>
+                                    <input
+                                        value={productForm.image_url}
+                                        onChange={e => setProductForm({ ...productForm, image_url: e.target.value })}
+                                        className="w-full bg-neutral-50 border border-neutral-200 p-3 rounded-xl focus:outline-brand-pink"
+                                        placeholder="https://..."
+                                    />
+                                    {productForm.image_url && (
+                                        <div className="mt-2 h-20 rounded-xl overflow-hidden bg-neutral-100 border text-xs flex items-center justify-center text-neutral-400">
+                                            <img src={productForm.image_url} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = LOGO_URL)} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="w-full bg-brand-pink text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] mt-4"
+                                >
+                                    {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 )}

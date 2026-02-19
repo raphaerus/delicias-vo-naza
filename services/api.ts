@@ -57,6 +57,41 @@ export const api = {
 
     // --- ADMIN FUNCTIONS ---
 
+    getAllProducts: async () => {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('name');
+        if (error) throw error;
+        return data as Product[];
+    },
+
+    createProduct: async (product: Omit<Product, 'id' | 'created_at'>) => {
+        const { data, error } = await supabase
+            .from('products')
+            .insert(product)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    updateProduct: async (id: string, updates: Partial<Product>) => {
+        const { error } = await supabase
+            .from('products')
+            .update(updates)
+            .eq('id', id);
+        if (error) throw error;
+    },
+
+    deleteProduct: async (id: string) => {
+        const { error } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    },
+
     getAdminOrders: async () => {
         const { data, error } = await supabase
             .from('orders')
