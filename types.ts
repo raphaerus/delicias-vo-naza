@@ -6,6 +6,7 @@ export interface Product {
   price: number;
   image_url: string;
   is_available?: boolean;
+  category?: string;
 }
 
 export interface StoreSettings {

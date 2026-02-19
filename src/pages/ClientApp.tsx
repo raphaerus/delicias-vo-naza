@@ -14,7 +14,8 @@ import {
     Send,
     X,
     Clock,
-    AlertCircle
+    AlertCircle,
+    Instagram
 } from 'lucide-react';
 import { LOGO_URL, ADDRESS_DISPLAY, INITIAL_STORE_SETTINGS, PIX_KEY, PIX_NAME, INSTAGRAM_URL } from '../../constants';
 import { CartItem, UserData, PaymentMethod, Order, Product, StoreSettings } from '../../types';
@@ -320,6 +321,18 @@ Pergunta: ${userMsg}`;
                                 </div>
                             </div>
                         )}
+
+                        {/* Informações de Contato (Sempre visíveis) */}
+                        <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
+                            <div className="flex items-center gap-1">
+                                <MapPin size={14} className="text-brand-pink" />
+                                <span>{ADDRESS_DISPLAY}</span>
+                            </div>
+                            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-brand-pink font-bold hover:underline">
+                                <Instagram size={14} />
+                                @delicias_da_vo_naza
+                            </a>
+                        </div>
 
                         {products.length > 0 && (
                             <div className="relative h-52 rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-brand-peach/20">

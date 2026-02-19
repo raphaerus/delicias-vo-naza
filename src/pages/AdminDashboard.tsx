@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Package, Settings, ShoppingBag, Loader2, CheckCircle, XCircle, Clock, Save, ToggleLeft, ToggleRight, Plus, Edit, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { LogOut, Package, Settings, ShoppingBag, Loader2, CheckCircle, XCircle, Clock, Save, ToggleLeft, ToggleRight, Plus, Edit, Trash2, X, Image as ImageIcon, Menu } from 'lucide-react';
 import { LOGO_URL } from '../../constants';
 import { api } from '../../services/api';
 import { Order, Product, StoreSettings } from '../../types';
@@ -16,6 +16,9 @@ export default function AdminDashboard() {
     const [products, setProducts] = useState<Product[]>([]);
     const [settings, setSettings] = useState<StoreSettings | null>(null);
     const [refreshKey, setRefreshKey] = useState(0); // To force re-fetch
+
+    // Mobile Sidebar State
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Product Modal State
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -169,41 +172,66 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-neutral-100 flex flex-col md:flex-row font-sans">
-            {/* Sidebar Mobile / Desktop */}
-            <aside className="bg-white w-full md:w-64 md:h-screen flex md:flex-col justify-between p-4 shadow-sm z-10 sticky top-0 h-auto">
-                <div className="flex items-center gap-3">
-                    <img src={LOGO_URL} className="w-10 h-10 rounded-full" alt="Logo" />
+            {/* Mobile Header */}
+            <div className="md:hidden bg-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-20">
+                <div className="flex items-center gap-2">
+                    <img src={LOGO_URL} className="w-8 h-8 rounded-full" alt="Logo" />
                     <h1 className="font-bold text-brand-brown">Painel Vó Naza</h1>
                 </div>
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-brand-brown">
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            </div>
 
-                <nav className="flex md:flex-col gap-2 mt-4 md:mt-8 overflow-x-auto md:overflow-visible">
-                    <button
-                        onClick={() => setActiveTab('orders')}
-                        className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'orders' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
-                    >
-                        <ShoppingBag size={20} /> Pedidos
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('products')}
-                        className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'products' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
-                    >
-                        <Package size={20} /> Produtos
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('settings')}
-                        className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'settings' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
-                    >
-                        <Settings size={20} /> Configurações
-                    </button>
-                </nav>
+            {/* Sidebar Mobile / Desktop */}
+            <aside className={`
+                bg-white w-64 h-screen flex flex-col justify-between p-4 shadow-sm z-30
+                fixed md:sticky top-0 left-0 transition-transform duration-300
+                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
+                <div>
+                    <div className="hidden md:flex items-center gap-3 mb-8">
+                        <img src={LOGO_URL} className="w-10 h-10 rounded-full" alt="Logo" />
+                        <h1 className="font-bold text-brand-brown">Painel Vó Naza</h1>
+                    </div>
+
+                    <nav className="flex flex-col gap-2">
+                        <button
+                            onClick={() => { setActiveTab('orders'); setIsMobileMenuOpen(false); }}
+                            className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'orders' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                        >
+                            <ShoppingBag size={20} /> Pedidos
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('products'); setIsMobileMenuOpen(false); }}
+                            className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'products' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                        >
+                            <Package size={20} /> Produtos
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }}
+                            className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${activeTab === 'settings' ? 'bg-brand-pink text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                        >
+                            <Settings size={20} /> Configurações
+                        </button>
+                    </nav>
+                </div>
 
                 <button onClick={handleLogout} className="mt-auto p-3 text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-3">
                     <LogOut size={20} /> Sair
                 </button>
             </aside>
 
+            {/* Overlay for mobile */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Content */}
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen w-full">
                 {activeTab === 'orders' && (
                     <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-brand-brown">Pedidos Recentes</h2>
